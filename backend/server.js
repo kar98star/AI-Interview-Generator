@@ -5,7 +5,7 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 dotenv.config();
 
-// Check if API key is loaded
+// Check API Key
 console.log("API Key Loaded:", !!process.env.GEMINI_API_KEY);
 console.log(
   "API Key Prefix:",
@@ -46,7 +46,7 @@ app.get("/check-key", (req, res) => {
 app.get("/test-ai", async (req, res) => {
   try {
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
+      model: "gemini-1.5-flash",
     });
 
     const result = await model.generateContent("Say Hello");
@@ -88,7 +88,7 @@ app.post("/generate", async (req, res) => {
     });
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
+      model: "gemini-1.5-flash",
     });
 
     const prompt = `
