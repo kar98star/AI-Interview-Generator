@@ -5,13 +5,19 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 dotenv.config();
 
+// Check if API key is loaded
+console.log("API Key Loaded:", !!process.env.GEMINI_API_KEY);
+console.log(
+  "API Key Prefix:",
+  process.env.GEMINI_API_KEY?.substring(0, 10)
+);
+
 const app = express();
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Gemini Configuration
+// Gemini Setup
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // ==========================================
@@ -19,7 +25,18 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 // ==========================================
 
 app.get("/", (req, res) => {
-    res.send("AI Interview Generator Backend Running 🚀");
+  res.send("AI Interview Generator Backend Running 🚀");
+});
+
+// ==========================================
+// CHECK API KEY ROUTE
+// ==========================================
+
+app.get("/check-key", (req, res) => {
+  res.json({
+    keyLoaded: !!process.env.GEMINI_API_KEY,
+    prefix: process.env.GEMINI_API_KEY?.substring(0, 10),
+  });
 });
 
 // ==========================================
@@ -27,30 +44,26 @@ app.get("/", (req, res) => {
 // ==========================================
 
 app.get("/test-ai", async (req, res) => {
-    try {
-        const model = genAI.getGenerativeModel({
-            model: "gemini-2.5-flash"
-        });
+  try {
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.5-flash",
+    });
 
-        const result = await model.generateContent(
-            "Generate one software testing interview question with answer."
-        );
+    const result = await model.generateContent("Say Hello");
 
-        const response = result.response.text();
+    res.json({
+      success: true,
+      data: result.response.text(),
+    });
+  } catch (error) {
+    console.error("TEST AI ERROR:");
+    console.error(error);
 
-        res.json({
-            success: true,
-            data: response
-        });
-
-    } catch (error) {
-        console.error("Gemini Error:", error);
-
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
-    }
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
 });
 
 // ==========================================
@@ -58,16 +71,28 @@ app.get("/test-ai", async (req, res) => {
 // ==========================================
 
 app.post("/generate", async (req, res) => {
-    try {
+  try {
+    const { role, difficulty, count } = req.body;
 
-        const { role, difficulty, count } = req.body;
+    if (!role || !difficulty || !count) {
+      return res.status(400).json({
+        success: false,
+        message: "role, difficulty and count are required",
+      });
+    }
 
-        const model = genAI.getGenerativeModel({
-            model: "gemini-2.5-flash"
-        });
+    console.log("Request Received:", {
+      role,
+      difficulty,
+      count,
+    });
 
-        const prompt = `
-Generate ${count} ${difficulty} level interview questions for the role "${role}".
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.5-flash",
+    });
+
+    const prompt = `
+Generate ${count} ${difficulty} interview questions for the role "${role}".
 
 For each question provide:
 
@@ -75,35 +100,32 @@ For each question provide:
 2. Answer
 3. Explanation
 
-Format the response clearly.
+Keep the response clean and professional.
 `;
 
-        const result = await model.generateContent(prompt);
+    const result = await model.generateContent(prompt);
 
-        const response = result.response.text();
+    res.json({
+      success: true,
+      data: result.response.text(),
+    });
+  } catch (error) {
+    console.error("GENERATE ERROR:");
+    console.error(error);
 
-        res.json({
-            success: true,
-            data: response
-        });
-
-    } catch (error) {
-
-        console.error("Generate Error:", error);
-
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
-    }
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
 });
 
 // ==========================================
-// SERVER
+// START SERVER
 // ==========================================
 
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
