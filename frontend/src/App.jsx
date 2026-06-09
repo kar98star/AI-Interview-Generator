@@ -12,7 +12,7 @@ function App() {
     try {
       setLoading(true);
 
-      const response = await fetch("http://localhost:5000/generate", {
+      const response = await fetch("https://name-ai-interview-generator-backend.onrender.com/generate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
